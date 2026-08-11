@@ -1,0 +1,8 @@
+//
+// Created by nevo4 on 06/08/2026.
+//
+
+#ifndef FAST_COMPEPTATIVE_MAKE_READY_H
+#define FAST_COMPEPTATIVE_MAKE_READY_H
+
+#endif //FAST_COMPEPTATIVE_MAKE_READY_H
