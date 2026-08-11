@@ -10,7 +10,11 @@
 #include <vector>
 #include <map>
 #include <queue>
+#include <ext/pb_ds/assoc_container.hpp>
 using namespace std;
+using namespace __gnu_pbds;
+typedef tree<int,null_type, std::less<int>,rb_tree_tag,
+tree_order_statistics_node_update> indexed_set;
 typedef long long ll;
 typedef set<int> si;
 typedef vector<int> vi;
