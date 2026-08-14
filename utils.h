@@ -25,4 +25,12 @@ void build_daikstra();
 void floyd_warshall(const ll n);
 void build_war();
 void show_war(ll n);
+
+void Edmons_Karp_FF(ll s, ll t);
+void scaling_FF(ll s, ll t);
+ll calculate_max_flow(ll s);
+vvll uniq_FF(ll s, ll t);
+int test();
+void init_graph(ll n);
+void add_edge(ll u, ll v, ll cap);
 #endif //FAST_COMPEPTATIVE_UTILS_H

@@ -3,6 +3,9 @@
 //
 
 #include "utils.h"
+
+#include <unordered_set>
+
 #include "typ.h"
 #define INF 9223372036854775807
 vvll dt_adj;
@@ -265,4 +268,250 @@ void show_war(ll n) {
         }
         cout << "\n";
     }
+}
+
+vvll dff_edge;
+vvll dff_edge_weight;
+vvll dff_edge_weight_cap;
+vb Edmons_Karp_visitedb;
+qll nex_Edmons_Karp;
+vll father_path;
+pair<ll,vll> Edmons_Karp_path(ll s_1, ll t) {
+    while (!nex_Edmons_Karp.empty()) {
+        nex_Edmons_Karp.pop();
+    }
+    fill(Edmons_Karp_visitedb.begin(), Edmons_Karp_visitedb.end(), false);
+    fill(father_path.begin(), father_path.end(), -1);
+
+
+    nex_Edmons_Karp.push(s_1);
+    // process node s
+    while (!nex_Edmons_Karp.empty()){
+        const ll s = nex_Edmons_Karp.front();
+        if (s == t) {
+            vll ret = {t};
+            ll fath = father_path[t];
+            ll mn = dff_edge_weight_cap[fath][t] - dff_edge_weight[fath][t] + dff_edge_weight[t][fath];
+            while (fath != s_1) {
+                ret.push_back(fath);
+                ll las = fath;
+                fath = father_path[fath];
+                mn = min(mn, dff_edge_weight_cap[fath][las] - dff_edge_weight[fath][las] + dff_edge_weight[las][fath]);
+            }
+            ret.push_back(fath);
+            reverse(ret.begin(), ret.end());
+            return {mn,ret};
+        }
+        nex_Edmons_Karp.pop();
+        if (Edmons_Karp_visitedb[s]) {
+            continue;
+        }
+        Edmons_Karp_visitedb[s] = true;
+        for (auto u: dff_edge[s]) {
+            if (dff_edge_weight_cap[s][u] - dff_edge_weight[s][u] + dff_edge_weight[u][s] > 0) {
+                father_path[u] = s;
+                nex_Edmons_Karp.push(u);
+            }
+        }
+    }
+    return {0,{}};
+}
+
+ll residual_cap(ll u, ll v) {
+    return dff_edge_weight_cap[u][v] - dff_edge_weight[u][v] + dff_edge_weight[v][u];
+}
+
+void Edmons_Karp_FF(ll s, ll t) {
+    for (auto &sd:dff_edge_weight) {
+        for (auto &sdtm:sd) {
+            sdtm = 0;
+        }
+    }
+    pair<ll,vll> path = Edmons_Karp_path(s, t);
+    while (path.first != 0) {
+        ll las =-1;
+        for (auto h : path.second) {
+            if (las!=-1) {
+                dff_edge_weight[las][h] += path.first;
+                ll min_e = min(dff_edge_weight[las][h],dff_edge_weight[h][las]);
+                dff_edge_weight[las][h] -= min_e;
+                dff_edge_weight[h][las] -= min_e;
+            }
+            las = h;
+        }
+        path = Edmons_Karp_path(s, t);
+    }
+}
+
+vb was;
+vll req_path(const ll s, ll t, const ll del) {
+    if (was[s]) {
+        return {};
+    }
+    was[s] = true;
+    if (s == t) {
+        return {t};
+    }
+    for (const ll u: dff_edge[s]) {
+        if (dff_edge_weight_cap[s][u] - dff_edge_weight[s][u] + dff_edge_weight[u][s] >= del) {
+            vll f = req_path(u, t, del);
+            if ( f.size() >0) {
+                f.push_back(s);
+                return f;
+            }
+        }
+    }
+    return {};
+}
+
+pair<ll,vll> scaling_path(ll C, ll st, ll t) {
+    while (C > 0) {
+        was.assign(dff_edge.size(), false);
+        vll pa = req_path(st, t, C);
+        if (pa.size() != 0) {
+            reverse(pa.begin(), pa.end());
+            return {C,pa};
+        }
+        C = C / 2;
+    }
+    return {C,{}};
+}
+void scaling_FF(ll s, ll t) {
+    ll C = 1;
+    ll max_c = 0;
+    for (auto cc:dff_edge_weight_cap) {
+        for (auto c:cc) {
+            max_c = max(max_c, c);
+        }
+    }
+    while (C * 2 <= max_c) {
+        C = C * 2;
+    }
+    for (auto &cd:dff_edge_weight) {
+        for (auto &cdff:cd) {
+            cdff = 0;
+        }
+    }
+    pair<ll,vll> path = scaling_path(C, s, t);
+    while (path.first != 0) {
+        ll las =-1;
+        for (auto h : path.second) {
+            if (las!=-1) {
+                dff_edge_weight[las][h] += path.first;
+                ll min_e = min(dff_edge_weight[las][h],dff_edge_weight[h][las]);
+                dff_edge_weight[las][h] -= min_e;
+                dff_edge_weight[h][las] -= min_e;
+            }
+            las = h;
+        }
+        path = scaling_path(path.first, s, t);
+    }
+}
+
+
+void init_graph(ll n) {
+    dff_edge.assign(n, vll());
+    dff_edge_weight.assign(n, vll(n, 0));
+    dff_edge_weight_cap.assign(n, vll(n, 0));
+    Edmons_Karp_visitedb.assign(n, false);
+    was.assign(n, false);
+    father_path.clear();
+    father_path.assign(n, -1);
+    while(!nex_Edmons_Karp.empty()) nex_Edmons_Karp.pop();
+}
+
+void add_edge(ll u, ll v, ll cap) {
+    dff_edge[u].push_back(v);
+    dff_edge[v].push_back(u); // Residual graph reverse edge support
+    dff_edge_weight_cap[u][v] += cap;
+}
+
+ll calculate_max_flow(ll s) {
+    ll flow = 0;
+    for (auto subflow: dff_edge_weight[s]) {
+        flow += subflow;
+    }
+    return flow;
+}
+
+vvll uniq_FF(ll s, ll t) {
+    // if (s == t) {
+    //     return {{t}};
+    // }
+    vvll uniq_flows;
+    ll c =0;
+    for (auto edge: dff_edge[s]) {
+        if (dff_edge_weight[s][edge] == 1) {
+            dff_edge_weight[s][edge] = 0;
+            vll uniq_flow;
+            uniq_flow.push_back(s);
+            ll ne = edge;
+            while (ne != t) {
+                ll lastn = ne;
+                for (auto edge_2: dff_edge[ne]){
+                    if (dff_edge_weight[ne][edge_2] == 1) {
+                        dff_edge_weight[ne][edge_2] = 0;
+                        uniq_flow.push_back(ne);
+                        ne = edge_2;
+                        break;
+                    }
+                }
+                if (lastn == ne) {
+                    break;
+                }
+            }
+            if (ne == t) {
+                uniq_flow.push_back(t);
+                uniq_flows.push_back(uniq_flow);
+            }
+        }
+    }
+    return uniq_flows;
+}
+// --- Test Driver ---
+
+void run_test(const string& test_name, int n, ll s, ll t, const vector<tuple<int, int, ll>>& edges, ll expected_flow) {
+    cout << "========================================" << endl;
+    cout << "Test Case: " << test_name << endl;
+
+    // Test Edmonds-Karp
+    init_graph(n);
+    for (auto& [u, v, cap] : edges) add_edge(u, v, cap);
+    Edmons_Karp_FF(s, t);
+    ll ek_flow = calculate_max_flow(s);
+
+    // Test Capacity Scaling
+    init_graph(n);
+    for (auto& [u, v, cap] : edges) add_edge(u, v, cap);
+    scaling_FF(s, t);
+    ll scaling_flow = calculate_max_flow(s);
+
+    cout << "Expected Max Flow     : " << expected_flow << endl;
+    cout << "Edmonds-Karp Result   : " << ek_flow << " [" << (ek_flow == expected_flow ? "PASSED" : "FAILED") << "]" << endl;
+    cout << "Capacity Scaling Result: " << scaling_flow << " [" << (scaling_flow == expected_flow ? "PASSED" : "FAILED") << "]" << endl;
+    cout << "========================================" << endl << endl;
+}
+
+int test() {
+    // Test Case 1: Standard Textbook Flow Network (6 nodes)
+    // 0: Source (s), 5: Sink (t)
+    vector<tuple<int, int, ll>> test1_edges = {
+        {0, 1, 16}, {0, 2, 13},
+        {1, 2, 10}, {2, 1, 4},
+        {1, 3, 12}, {3, 2, 9},
+        {2, 4, 14}, {4, 3, 7},
+        {3, 5, 20}, {4, 5, 4}
+    };
+    run_test("Standard 6-node Network", 6, 0, 5, test1_edges, 23);
+
+    // Test Case 2: Simple Diamond Graph (4 nodes)
+    // 0: Source, 3: Sink
+    vector<tuple<int, int, ll>> test2_edges = {
+        {0, 1, 1000000}, {0, 2, 1000000},
+        {1, 2, 1},
+        {1, 3, 1000000}, {2, 3, 1000000}
+    };
+    run_test("Diamond Graph with High Capacity", 4, 0, 3, test2_edges, 2000000);
+
+    return 0;
 }
