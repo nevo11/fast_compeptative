@@ -1,0 +1,8 @@
+//
+// Created by nevo4 on 16/08/2026.
+//
+
+#ifndef FAST_COMPEPTATIVE_METRIX_H
+#define FAST_COMPEPTATIVE_METRIX_H
+
+#endif //FAST_COMPEPTATIVE_METRIX_H
