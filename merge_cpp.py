@@ -107,6 +107,7 @@ class MergeResult:
     inlined_files: list[str] = field(default_factory=list)
     fake_main_candidates: list[str] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
+    auto_included_impls: list[str] = field(default_factory=list)
 
 
 class CppMerger:
@@ -118,6 +119,7 @@ class CppMerger:
         self.already_inlined: set[str] = set()        # resolved abs paths
         self.inlined_order: list[str] = []
         self.warnings: list[str] = []
+        self.auto_included_impls: list[str] = []
 
     # -- include resolution ---------------------------------------------
     def _resolve(self, inc_name: str, including_file: str) -> str | None:
@@ -126,6 +128,24 @@ class CppMerger:
         for c in candidates:
             if os.path.isfile(c):
                 return os.path.abspath(c)
+        return None
+
+    # -- companion-implementation resolution -----------------------------
+    def _find_companion_cpp(self, header_abspath: str) -> str | None:
+        """Given an inlined header like utils.h, look for utils.cpp (or
+        .cc/.cxx) sitting right next to it and return its abs path if found.
+
+        This lets you #include "utils.h" without ever writing
+        #include "utils.cpp" — the merger pulls the implementation file in
+        automatically, once, the first time its header is inlined.
+        """
+        base, ext = os.path.splitext(header_abspath)
+        if ext.lower() not in (".h", ".hpp", ".hh"):
+            return None
+        for cpp_ext in (".cpp", ".cc", ".cxx"):
+            candidate = base + cpp_ext
+            if os.path.isfile(candidate):
+                return os.path.abspath(candidate)
         return None
 
     # -- core recursive inliner -------------------------------------------
@@ -199,6 +219,20 @@ class CppMerger:
                     if inlined:
                         out_lines.append(inlined)
                     out_lines.append(f"// ---- end {rel} ----\n")
+
+                    # Auto-pull the matching implementation file for a header,
+                    # even though nothing explicitly #included it.
+                    companion = self._find_companion_cpp(resolved)
+                    if companion and companion not in self.already_inlined:
+                        crel = os.path.basename(companion)
+                        self.auto_included_impls.append(companion)
+                        out_lines.append(
+                            f"// ---- begin {crel} (auto-included impl for {rel}) ----\n"
+                        )
+                        inlined_companion = self._inline(companion)
+                        if inlined_companion:
+                            out_lines.append(inlined_companion)
+                        out_lines.append(f"// ---- end {crel} ----\n")
                 i += 1
                 continue
 
@@ -216,6 +250,7 @@ class CppMerger:
             system_includes=list(self.system_includes.keys()),
             inlined_files=self.inlined_order,
             warnings=self.warnings,
+            auto_included_impls=self.auto_included_impls,
         )
 
 
@@ -301,7 +336,7 @@ def assemble_output(result: MergeResult, entry_func: str | None) -> tuple[str, l
         pass  # don't force bits/stdc++.h if the user's own headers already list what they need
 
     if "using namespace std;" not in body and any(
-        inc in ("iostream", "vector", "bits/stdc++.h") for inc in result.system_includes
+            inc in ("iostream", "vector", "bits/stdc++.h") for inc in result.system_includes
     ):
         header.append("using namespace std;\n")
 
@@ -343,6 +378,12 @@ def main() -> int:
 
     for w in result.warnings:
         print(f"[merge_cpp.py] warning: {w}", file=sys.stderr)
+    for impl in result.auto_included_impls:
+        print(
+            f"[merge_cpp.py] note: auto-included '{os.path.basename(impl)}' "
+            f"(matching header was included, .cpp was not — pulled in automatically)",
+            file=sys.stderr,
+        )
     for n in notes:
         print(f"[merge_cpp.py] note: {n}", file=sys.stderr)
 
