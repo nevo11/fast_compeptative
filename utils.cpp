@@ -285,9 +285,11 @@ pair<ll,vll> Edmons_Karp_path(ll s_1, ll t) {
 
 
     nex_Edmons_Karp.push(s_1);
+    Edmons_Karp_visitedb[s_1] = true; // mark visited at discovery (push), not at pop
     // process node s
     while (!nex_Edmons_Karp.empty()){
         const ll s = nex_Edmons_Karp.front();
+        nex_Edmons_Karp.pop();
         if (s == t) {
             vll ret = {t};
             ll fath = father_path[t];
@@ -302,13 +304,9 @@ pair<ll,vll> Edmons_Karp_path(ll s_1, ll t) {
             reverse(ret.begin(), ret.end());
             return {mn,ret};
         }
-        nex_Edmons_Karp.pop();
-        if (Edmons_Karp_visitedb[s]) {
-            continue;
-        }
-        Edmons_Karp_visitedb[s] = true;
         for (auto u: dff_edge[s]) {
-            if (dff_edge_weight_cap[s][u] - dff_edge_weight[s][u] + dff_edge_weight[u][s] > 0) {
+            if (!Edmons_Karp_visitedb[u] && dff_edge_weight_cap[s][u] - dff_edge_weight[s][u] + dff_edge_weight[u][s] > 0) {
+                Edmons_Karp_visitedb[u] = true;
                 father_path[u] = s;
                 nex_Edmons_Karp.push(u);
             }
@@ -322,6 +320,7 @@ ll residual_cap(ll u, ll v) {
 }
 
 void Edmons_Karp_FF(ll s, ll t) {
+    if (s == t) return; // no augmenting path is meaningful when source == sink
     for (auto &sd:dff_edge_weight) {
         for (auto &sdtm:sd) {
             sdtm = 0;
@@ -377,6 +376,7 @@ pair<ll,vll> scaling_path(ll C, ll st, ll t) {
     return {C,{}};
 }
 void scaling_FF(ll s, ll t) {
+    if (s == t) return; // avoid trivial s==t "path" causing an infinite augmenting loop
     ll C = 1;
     ll max_c = 0;
     for (auto cc:dff_edge_weight_cap) {
@@ -512,6 +512,52 @@ int test() {
         {1, 3, 1000000}, {2, 3, 1000000}
     };
     run_test("Diamond Graph with High Capacity", 4, 0, 3, test2_edges, 2000000);
+
+    // Test Case 3: No path from s to t at all -> flow should be 0
+    vector<tuple<int, int, ll>> test3_edges = {
+        {0, 1, 10}, {2, 3, 10}
+    };
+    run_test("Disconnected Source/Sink", 4, 0, 3, test3_edges, 0);
+
+    // Test Case 4: Single direct edge s -> t
+    vector<tuple<int, int, ll>> test4_edges = {
+        {0, 1, 7}
+    };
+    run_test("Single Direct Edge", 2, 0, 1, test4_edges, 7);
+
+    // Test Case 5: Classic case requiring the residual (reverse) edge
+    // to be used to reach the true max flow (bottleneck forces cancellation).
+    vector<tuple<int, int, ll>> test5_edges = {
+        {0, 1, 1}, {0, 2, 1},
+        {1, 2, 1},
+        {1, 3, 1}, {2, 3, 1}
+    };
+    run_test("Requires Residual Cancellation", 4, 0, 3, test5_edges, 2);
+
+    // Test Case 6: Parallel-ish multi-hop chain, flow limited by weakest link
+    vector<tuple<int, int, ll>> test6_edges = {
+        {0, 1, 5}, {1, 2, 3}, {2, 3, 8}, {0, 3, 2}
+    };
+    run_test("Bottleneck Chain Plus Direct Edge", 4, 0, 3, test6_edges, 5);
+
+    // Test Case 7: s == t edge case (trivial, flow is 0 by definition here
+    // since calculate_max_flow sums outgoing flow from s, and no augmenting
+    // path search should be needed).
+    vector<tuple<int, int, ll>> test7_edges = {
+        {0, 1, 5}
+    };
+    run_test("Source Equals Sink", 2, 0, 0, test7_edges, 0);
+
+    // Test Case 8: Larger random DAG-ish graph, cross-checking EK vs scaling
+    // against each other (both must agree, exact value computed by hand below).
+    // Layered graph 0 -> {1,2} -> {3,4} -> 5
+    vector<tuple<int, int, ll>> test8_edges = {
+        {0, 1, 10}, {0, 2, 10},
+        {1, 3, 4}, {1, 4, 8},
+        {2, 3, 9}, {2, 4, 6},
+        {3, 5, 10}, {4, 5, 10}
+    };
+    run_test("Layered Graph", 6, 0, 5, test8_edges, 20);
 
     return 0;
 }
