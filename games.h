@@ -1,0 +1,8 @@
+//
+// Created by nevo4 on 18/08/2026.
+//
+
+#ifndef FAST_COMPEPTATIVE_GAMES_H
+#define FAST_COMPEPTATIVE_GAMES_H
+
+#endif //FAST_COMPEPTATIVE_GAMES_H

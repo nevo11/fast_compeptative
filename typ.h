@@ -19,6 +19,7 @@ typedef tree<int,null_type, std::less<int>,rb_tree_tag,
 tree_order_statistics_node_update> indexed_set;
 typedef long long ll;
 typedef vector<ll> vll;
+typedef unsigned long long ull;
 typedef vector<vector<ll>> vvll;
 typedef set<int> si;
 typedef vector<int> vi;

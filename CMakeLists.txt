@@ -23,7 +23,13 @@ add_executable(fast_compeptative main.cpp
         G.cpp
         G.h
         H.cpp
-        H.h)
+        H.h
+        metrix.cpp
+        metrix.h
+        matth.cpp
+        matth.h
+        games.cpp
+        games.h)
 
 add_executable(make_ready make_ready.cpp
         utils.cpp
