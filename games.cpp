@@ -191,33 +191,33 @@ unordered_map<ull,ull> grundy_(const ll n, priority_queue<pll> edge_move, unorde
     //     }
     // }
 }
-pll grundy_move(ll k, vector<tuple<ll, priority_queue<pll>, unordered_map<ll,ll>, vector<unordered_set<ll>>, vector<unordered_set<ll>>>> all_mightiy) {
-    ll s=0;
-    vector<unordered_map<ull,ull>> grundys;
-    for (int h=0;h<k;h++) {
-
-        grundys.push_back(grundy_(std::apply(all_mightiy[h]));
-    }
-    for (auto ni:nim_) {
-        s = (s^ni);
-    }
-    if (s == 0) {
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::uniform_int_distribution<int> pile_dist(0, k-1);
-        ll i = pile_dist(gen);
-        while (nim_[i] == 0) {
-            i = pile_dist(gen);
-        }
-        std::uniform_int_distribution<int> stick_dis(1, nim_[i]);
-        return {i, stick_dis(gen)};
-    }
-    for (ll i =0; i<k;i++) {
-        if ((nim_[i]^s) <nim_[i]) {
-            return {i,nim_[i]-(nim_[i]^s)};
-        }
-    }
-}
+// pll grundy_move(ll k, vector<tuple<ll, priority_queue<pll>, unordered_map<ll,ll>, vector<unordered_set<ll>>, vector<unordered_set<ll>>>> all_mightiy) {
+//     ll s=0;
+//     vector<unordered_map<ull,ull>> grundys;
+//     for (int h=0;h<k;h++) {
+//
+//         grundys.push_back(grundy_(std::apply(all_mightiy[h]));
+//     }
+//     for (auto ni:nim_) {
+//         s = (s^ni);
+//     }
+//     if (s == 0) {
+//         std::random_device rd;
+//         std::mt19937 gen(rd());
+//         std::uniform_int_distribution<int> pile_dist(0, k-1);
+//         ll i = pile_dist(gen);
+//         while (nim_[i] == 0) {
+//             i = pile_dist(gen);
+//         }
+//         std::uniform_int_distribution<int> stick_dis(1, nim_[i]);
+//         return {i, stick_dis(gen)};
+//     }
+//     for (ll i =0; i<k;i++) {
+//         if ((nim_[i]^s) <nim_[i]) {
+//             return {i,nim_[i]-(nim_[i]^s)};
+//         }
+//     }
+// }
 
 int exemple() {
     nim_ = {5,12,10};
