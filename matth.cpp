@@ -236,50 +236,45 @@ ll power_mdular_expention(ll base, ll exp, const ll mod) {
 }
 
 
-ll modInverse(ll n, ll mod) {
-    if (mod == -1) return 1;
-    return power_mdular_expention(n, mod - 2, mod);
-}
+// ll modInverse(ll n, ll mod) {
+//     if (mod == -1) return 1;
+//     return power_mdular_expention(n, mod - 2, mod);
+// }
 
 ll nCr(ll n, ll k, ll mod) {
     if (k < 0 || k > n) return 0;
     if (k == 0 || k == n) return 1;
-    ll num = fact(n, mod);
+    ll num = fact(n, -1);
 
     if (mod == -1) {
         ll den = fact(k, mod) * fact(n - k, mod);
         return num / den;
     }
 
-    ll den = (fact(k, mod) * fact(n - k, mod)) % mod;
-    return (num * modInverse(den, mod)) % mod;
+    ll den = fact(k, -1) * fact(n - k, -1);
+    return (num / den) %mod;
 }
 
 ll multichoose(ll n, const vll& k, ll mod) {
     if (k.size() == 1) return 1;
     if (k.size() == 2) return nCr(n, k[0], mod);
 
-    ll su = fact(n, mod);
+    ll su = fact(n, -1);
     ll den = 1;
 
     for (const auto k_i : k) {
-        if (mod == -1) {
-            den *= fact(k_i, mod);
-        } else {
-            den = (den * fact(k_i, mod)) % mod;
-        }
+        den *= fact(k_i, -1);
     }
 
     if (mod == -1) return su / den;
-    return (su * modInverse(den, mod)) % mod;
+    return (su / den)%mod;
 }
 
 ll catalan_fast(ll n, ll mod) {
     ll c = nCr(2 * n, n, mod);
     if (mod == -1) return c / (n + 1);
-
-    ll den_inv = modInverse(n + 1, mod);
-    return (c * den_inv) % mod;
+    // ll den_inv = modInverse(n + 1, mod);
+    return (c / (n + 1)) % mod;
 }
 
 ll derangement(ll n, ll mod) {
@@ -311,7 +306,7 @@ ll burnside_lemma(ll n, ll m, ll mod) {
     }
 
     if (mod == -1) return su / n;
-    return (su * modInverse(n, mod)) % mod;
+    return (su / n) % mod;
 }
 
 vll prufer(vector<unordered_set<ll>> tree, int n) {
