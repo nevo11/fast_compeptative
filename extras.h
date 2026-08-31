@@ -1,0 +1,8 @@
+//
+// Created by nevo4 on 01/09/2026.
+//
+
+#ifndef FAST_COMPEPTATIVE_EXTRAS_H
+#define FAST_COMPEPTATIVE_EXTRAS_H
+
+#endif //FAST_COMPEPTATIVE_EXTRAS_H

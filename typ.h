@@ -4,6 +4,7 @@
 
 #ifndef LEARN_TO_CODE_TYP_H
 #define LEARN_TO_CODE_TYP_H
+#include <complex>
 #include <iostream>
 #include <set>
 #include <string>
@@ -34,9 +35,19 @@ typedef queue<ll> qll;
 typedef set<int> si;
 typedef unordered_set<ll> usll;
 typedef vector<pair<ll,ll>> vpll;
+typedef vector<vpll> vvpll;
 typedef unordered_map<ll,ll> umll;
 typedef vector<unordered_map<ll,ll>> vumll;
 typedef unordered_map<ll,vll> umvll;
 typedef vector<double> vd;
 typedef vector<vector<double>> vvd;
+typedef long long C;
+typedef complex<C> P;
+typedef vector<complex<C>> vP;
+typedef long double ld;
+typedef complex<ld> Pd;
+typedef tree<ld,null_type, std::less<ld>,rb_tree_tag,
+tree_order_statistics_node_update> indexed_set_ld;
+// #define X real()
+// #define Y imag()
 #endif //LEARN_TO_CODE_TYP_H
